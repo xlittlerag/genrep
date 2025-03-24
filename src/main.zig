@@ -1,14 +1,14 @@
 const std = @import("std");
-// const parser = @import("parser.zig");
-// const report = @import("report.zig");
-// const config = @import("config.zig");
+const parser = @import("parser.zig");
+const report = @import("report.zig");
+const config = @import("config.zig");
 
 const stdout = std.io.getStdOut().writer();
 const stderr = std.io.getStdErr().writer();
 
 const Options = struct {
     template_file: ?[]const u8,
-    format: []const u8,
+    format: report.Format,
     config_file: ?[]const u8,
     verbose: bool,
     findings_dir: ?[]const u8,
@@ -32,7 +32,7 @@ pub fn main() !void {
 
     var options = Options{
         .template_file = null,
-        .format = "md",
+        .format = .md,
         .config_file = null,
         .verbose = false,
         .findings_dir = null,
@@ -58,7 +58,9 @@ pub fn main() !void {
                 try stderr.print("Error: Missing argument for {s}\n", .{arg});
                 return error.MissingArgument;
             }
-            options.format = args[i + 1];
+            if (std.mem.eql(u8, args[i + 1], "pdf")) {
+                options.format = .pdf;
+            }
             i += 1;
         } else if (std.mem.eql(u8, arg, "-c") or std.mem.eql(u8, arg, "--config")) {
             if (i + 1 >= args.len) {
@@ -91,7 +93,7 @@ pub fn main() !void {
         try stdout.print("Running with options:\n", .{});
         try stdout.print("  Findings directory: {s}\n", .{options.findings_dir.?});
         try stdout.print("  Output file: {s}\n", .{options.output_file.?});
-        try stdout.print("  Format: {s}\n", .{options.format});
+        try stdout.print("  Format: {}\n", .{options.format});
         if (options.template_file) |tf| {
             try stdout.print("  Template file: {s}\n", .{tf});
         }

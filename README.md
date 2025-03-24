@@ -1,4 +1,4 @@
-# Audit Report Generator
+# Audit Report Generator (genrep)
 
 A lightweight command-line tool written in Zig that enables blockchain security engineers to create standardized smart contract audit reports from structured input files.
 
@@ -28,15 +28,15 @@ This project is under active development. Currently:
 ## Building
 
 ```bash
-git clone https://github.com/xlittlerag/audit-report-gen.git
-cd audit-report-gen
+git clone https://github.com/xlittlerag/genrep.git
+cd genrep
 zig build
 ```
 
 ## Usage
 
 ```bash
-./audit-report-gen [OPTIONS] <findings-dir> <output-file>
+./genrep [OPTIONS] <findings-dir> <output-file>
 
 Options:
   -t, --template <template-file>       Custom template file
@@ -50,7 +50,7 @@ Options:
 ### Example Usage
 
 ```bash
-./audit-report-gen --project-config examples/project.ziggy -v examples/findings report.md
+./genrep --project-config examples/project.ziggy -v examples/findings report.md
 ```
 
 ## Finding File Structure (Ziggy format)

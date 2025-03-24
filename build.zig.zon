@@ -30,12 +30,5 @@
             .hash = "ziggy-0.1.0-kTg8vwkbBgAOHreabwZtDDtNDi3U_RAiOMvuRDTJiy0I",
         },
     },
-    .paths = .{
-        "build.zig",
-        "build.zig.zon",
-        "src",
-        // For example...
-        //"LICENSE",
-        //"README.md",
-    },
+    .paths = .{"."},
 }

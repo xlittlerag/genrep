@@ -2,11 +2,14 @@ const std = @import("std");
 const config = @import("config.zig");
 const parser = @import("parser.zig");
 
-pub const Format = enum { pdf, md };
+/// Output format enum
+pub const Format = enum {
+    md, // Markdown
+    pdf, // PDF
+};
 
 /// Generate a report from findings
 pub fn generateReport(
-    allocator: std.mem.Allocator,
     findings: std.ArrayList(parser.Finding),
     cfg: config.Config,
     output_path: []const u8,
@@ -21,7 +24,7 @@ pub fn generateReport(
     sortFindingsBySeverity(findings);
 
     if (format == .md) {
-        try generateMarkdownReport(allocator, findings, cfg, output_path, verbose);
+        try generateMarkdownReport(findings, cfg, output_path, verbose);
     } else if (format == .pdf) {
         // PDF generation is not implemented yet
         return error.PdfGenerationNotImplemented;
@@ -32,7 +35,7 @@ pub fn generateReport(
 
 /// Sort findings by severity (Critical first, Informational last)
 fn sortFindingsBySeverity(findings: std.ArrayList(parser.Finding)) void {
-    std.sort.sort(parser.Finding, findings.items, {}, compareFindingsBySeverity);
+    std.sort.insertion(parser.Finding, findings.items, {}, compareFindingsBySeverity);
 }
 
 /// Comparison function for sorting findings by severity
@@ -43,7 +46,6 @@ fn compareFindingsBySeverity(context: void, a: parser.Finding, b: parser.Finding
 
 /// Generate a report in Markdown format
 fn generateMarkdownReport(
-    // allocator: std.mem.Allocator,
     findings: std.ArrayList(parser.Finding),
     cfg: config.Config,
     output_path: []const u8,
@@ -109,12 +111,6 @@ fn generateMarkdownReport(
                     code_ref.file,
                     code_ref.lines,
                 });
-
-                // Include code snippets if enabled
-                // if (cfg.report.include_code_snippets) {
-                //     // TODO: Implement code snippet extraction
-                //     try file.writer().print("```solidity\n// Code snippet will be included here\n```\n\n", .{});
-                // }
             }
         }
 

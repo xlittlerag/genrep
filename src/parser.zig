@@ -81,16 +81,28 @@ pub fn parseFindings(allocator: std.mem.Allocator, dir_path: []const u8, verbose
 }
 
 /// Parse a single finding file
-pub fn parseFindingFile(allocator: std.mem.Allocator, file_path: []const u8) !Finding {
-    const file = try std.fs.cwd().openFile(file_path, .{});
-    defer file.close();
+pub fn parseFindingFile(allocator: std.mem.Allocator, file_path: []const u8, verbose: bool) !Finding {
+    // Open the file's directory
+    const path = std.fs.path.dirname(file_path) orelse ".";
+    const filename = std.fs.path.basename(file_path);
 
-    const file_content = try file.readToEndAlloc(allocator, 1024 * 1024); // 1MB max
+    var dir = try std.fs.cwd().openDir(path, .{});
+    defer dir.close();
+
+    // Read the file with null termination
+    const file_content = try dir.readFileAllocOptions(allocator, filename, ziggy.max_size, null, // size_hint
+        1, // alignment
+        0 // sentinel value (null terminator)
+    );
     defer allocator.free(file_content);
 
     // Basic validation that this is a Ziggy format file
     if (!std.mem.containsAtLeast(u8, file_content, 1, "{")) {
         return error.InvalidFindingFormat;
+    }
+
+    if (verbose) {
+        std.log.info("Parsing file content for: {s}", .{file_path});
     }
 
     return try ziggy.parseLeaky(Finding, allocator, file_content, .{});

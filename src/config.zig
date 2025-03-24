@@ -45,28 +45,36 @@ pub const Config = struct {
 
     /// Load project configuration from file
     pub fn loadProjectConfig(allocator: std.mem.Allocator, file_path: []const u8) !ProjectConfig {
-        // Read the file
-        const file = try std.fs.cwd().openFile(file_path, .{});
-        defer file.close();
+        // Open the file's directory
+        const path = std.fs.path.dirname(file_path) orelse ".";
+        const filename = std.fs.path.basename(file_path);
 
-        const file_content = try file.readToEndAlloc(allocator, 1024 * 1024); // 1MB max
+        var dir = try std.fs.cwd().openDir(path, .{});
+        defer dir.close();
+
+        // Read the file with null termination
+        const file_content = try dir.readFileAllocOptions(allocator, filename, ziggy.max_size, null, 1, 0);
         defer allocator.free(file_content);
 
-        // Parse config file or start with default configuration
+        // Parse config file using ziggy parser
         return try ziggy.parseLeaky(ProjectConfig, allocator, file_content, .{});
     }
 
     /// Load report configuration from file
     pub fn loadReportConfig(allocator: std.mem.Allocator, file_path: []const u8) !ReportConfig {
-        // Read the file
-        const file = try std.fs.cwd().openFile(file_path, .{});
-        defer file.close();
+        // Open the file's directory
+        const path = std.fs.path.dirname(file_path) orelse ".";
+        const filename = std.fs.path.basename(file_path);
 
-        const file_content = try file.readToEndAlloc(allocator, 1024 * 1024); // 1MB max
+        var dir = try std.fs.cwd().openDir(path, .{});
+        defer dir.close();
+
+        // Read the file with null termination
+        const file_content = try dir.readFileAllocOptions(allocator, filename, ziggy.max_size, null, 1, 0);
         defer allocator.free(file_content);
 
-        // Parse config file or start with default configuration
-        return ziggy.parseLeaky(ReportConfig, allocator, file_content, .{});
+        // Parse config file using ziggy parser
+        return try ziggy.parseLeaky(ReportConfig, allocator, file_content, .{});
     }
 };
 

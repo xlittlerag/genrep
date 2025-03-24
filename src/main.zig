@@ -9,7 +9,8 @@ const stderr = std.io.getStdErr().writer();
 const Options = struct {
     template_file: ?[]const u8,
     format: report.Format,
-    config_file: ?[]const u8,
+    project_config_file: ?[]const u8, // Project-specific config file
+    report_config_file: ?[]const u8, // Report-specific config file
     verbose: bool,
     findings_dir: ?[]const u8,
     output_file: ?[]const u8,
@@ -33,7 +34,8 @@ pub fn main() !void {
     var options = Options{
         .template_file = null,
         .format = .md,
-        .config_file = null,
+        .project_config_file = null,
+        .report_config_file = null,
         .verbose = false,
         .findings_dir = null,
         .output_file = null,
@@ -62,12 +64,19 @@ pub fn main() !void {
                 options.format = .pdf;
             }
             i += 1;
-        } else if (std.mem.eql(u8, arg, "-c") or std.mem.eql(u8, arg, "--config")) {
+        } else if (std.mem.eql(u8, arg, "--project-config")) {
             if (i + 1 >= args.len) {
                 try stderr.print("Error: Missing argument for {s}\n", .{arg});
                 return error.MissingArgument;
             }
-            options.config_file = args[i + 1];
+            options.project_config_file = args[i + 1];
+            i += 1;
+        } else if (std.mem.eql(u8, arg, "--report-config")) {
+            if (i + 1 >= args.len) {
+                try stderr.print("Error: Missing argument for {s}\n", .{arg});
+                return error.MissingArgument;
+            }
+            options.report_config_file = args[i + 1];
             i += 1;
         } else if (std.mem.eql(u8, arg, "-v") or std.mem.eql(u8, arg, "--verbose")) {
             options.verbose = true;
@@ -97,14 +106,70 @@ pub fn main() !void {
         if (options.template_file) |tf| {
             try stdout.print("  Template file: {s}\n", .{tf});
         }
-        if (options.config_file) |cf| {
-            try stdout.print("  Config file: {s}\n", .{cf});
+        if (options.project_config_file) |pcf| {
+            try stdout.print("  Project config file: {s}\n", .{pcf});
+        }
+        if (options.report_config_file) |rcf| {
+            try stdout.print("  Report config file: {s}\n", .{rcf});
         }
     }
 
-    // TODO: Implement actual report generation logic
-    try stdout.print("Audit report generator started...\n", .{});
-    try stdout.print("Note: This is a placeholder. Actual report generation not yet implemented.\n", .{});
+    // Load configuration
+    var cfg = config.Config.init();
+
+    // Handle project configuration
+    if (options.project_config_file) |project_config_path| {
+        if (options.verbose) {
+            try stdout.print("Loading project configuration from {s}...\n", .{project_config_path});
+        }
+
+        cfg.project = try config.Config.loadProjectConfig(allocator, project_config_path);
+    }
+
+    // Handle report configuration
+    if (options.report_config_file) |report_config_path| {
+        if (options.verbose) {
+            try stdout.print("Loading report configuration from {s}...\n", .{report_config_path});
+        }
+
+        cfg.report = try config.Config.loadReportConfig(allocator, report_config_path);
+    }
+
+    if (options.verbose) {
+        try stdout.print("Configuration loaded:\n", .{});
+        try stdout.print("  Project: {s}\n", .{cfg.project.name});
+        try stdout.print("  Client: {s}\n", .{cfg.project.client});
+        try stdout.print("  Template: {s}\n", .{cfg.report.template});
+    }
+
+    // Parse findings
+    if (options.verbose) {
+        try stdout.print("Parsing findings from {s}...\n", .{options.findings_dir.?});
+    }
+
+    var findings = parser.parseFindings(allocator, options.findings_dir.?, options.verbose) catch |err| {
+        try stderr.print("Error parsing findings: {}\n", .{err});
+        return err;
+    };
+    defer {
+        for (findings.items) |*finding| {
+            finding.deinit(allocator);
+        }
+        findings.deinit();
+    }
+
+    if (options.verbose) {
+        try stdout.print("Found {} findings\n", .{findings.items.len});
+    }
+
+    // Generate report
+    if (options.verbose) {
+        try stdout.print("Generating report to {s}...\n", .{options.output_file.?});
+    }
+
+    try report.generateReport(findings, cfg, options.output_file.?, options.format, options.verbose);
+
+    try stdout.print("Report generated successfully: {s}\n", .{options.output_file.?});
 }
 
 fn printUsage() !void {
@@ -112,11 +177,16 @@ fn printUsage() !void {
         \\audit-report-gen [OPTIONS] <findings-dir> <output-file>
         \\
         \\Options:
-        \\  -t, --template <template-file>   Custom template file
-        \\  -f, --format <format>            Output format (md, pdf) [default: md]
-        \\  -c, --config <config-file>       Configuration file
-        \\  -v, --verbose                    Verbose output
-        \\  -h, --help                       Print help information
+        \\  -t, --template <template-file>       Custom template file
+        \\  -f, --format <format>                Output format (md, pdf) [default: md]
+        \\  --project-config <config-file>       Project-specific configuration file
+        \\  --report-config <config-file>        Report-specific configuration file
+        \\  -v, --verbose                        Verbose output
+        \\  -h, --help                           Print help information
         \\
     , .{});
+}
+
+test "simple test" {
+    try std.testing.expectEqual(true, true);
 }

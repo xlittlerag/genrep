@@ -4,12 +4,21 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    // Add ziggy dependency
+    const ziggy = b.dependency("ziggy", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
     const exe = b.addExecutable(.{
-        .name = "genrep",
+        .name = "audit-report-gen",
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
+
+    // Add ziggy module
+    exe.root_module.addImport("ziggy", ziggy.module("ziggy"));
 
     b.installArtifact(exe);
 
@@ -27,6 +36,9 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+
+    // Add ziggy module to tests
+    unit_tests.root_module.addImport("ziggy", ziggy.module("ziggy"));
 
     const run_unit_tests = b.addRunArtifact(unit_tests);
 

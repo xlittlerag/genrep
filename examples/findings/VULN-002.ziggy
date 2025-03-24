@@ -1,0 +1,20 @@
+{
+  .title = "Lack of input validation",
+  .id = "VULN-002",
+  .severity = .Medium,
+  .description = 
+    \\The deposit function does not validate that the amount being deposited
+    \\is greater than zero. This could lead to unnecessary gas consumption
+    \\and pollute the event logs with zero-value deposits.
+  ,
+  .code_refs = {
+    {
+      .file = "contracts/Vault.sol",
+      .lines = "30-38",
+    },
+  },
+  .recommendation = 
+    \\Add a require statement to ensure that deposit amounts are greater than zero.
+    \\For example: `require(amount > 0, "Deposit amount must be greater than zero");`
+  ,
+}

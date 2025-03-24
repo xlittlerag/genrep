@@ -1,0 +1,38 @@
+{
+  .project = {
+    .name = "Protocol X",
+    .client = "DeFi Labs",
+    .date = "2025-03-10",
+    .auditors = {
+      "Alice Smith",
+      "Bob Johnson",
+    },
+  },
+  .report = {
+    .template = "default",
+    .include_code_snippets = false,
+    .include_summary_table = true,
+  },
+  .severity_levels = {
+    .Critical = {
+      .description = "Issues that can lead to direct fund loss",
+      .color = "#FF0000",
+    },
+    .High = {
+      .description = "Issues that can lead to indirect fund loss",
+      .color = "#FFA500",
+    },
+    .Medium = {
+      .description = "Issues that could cause problems with operations",
+      .color = "#FFFF00",
+    },
+    .Low = {
+      .description = "Issues that are minor or represent best practices",
+      .color = "#00FF00",
+    },
+    .Informational = {
+      .description = "Suggestions and informational findings",
+      .color = "#0000FF",
+    },
+  },
+}

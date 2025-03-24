@@ -1,0 +1,22 @@
+{
+  .title = "Reentrancy in withdraw function",
+  .id = "VULN-001",
+  .severity = .Critical,
+  .description = 
+    \\The withdraw function does not follow the checks-effects-interactions pattern,
+    \\allowing potential reentrancy attacks. An attacker could call the withdraw
+    \\function again before the first invocation completes, potentially draining
+    \\more funds than they should be able to.
+  ,
+  .code_refs = {
+    {
+      .file = "contracts/Vault.sol",
+      .lines = "45-52",
+    },
+  },
+  .recommendation = 
+    \\Implement the checks-effects-interactions pattern by updating state
+    \\before making external calls. Update the user's balance before transferring
+    \\funds to prevent reentrancy attacks.
+  ,
+}
